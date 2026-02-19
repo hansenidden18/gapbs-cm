@@ -82,6 +82,20 @@ All source lives in `src/`. Each kernel is a single `.cc` file that compiles to 
 
 ## Testing
 
+# 1. Find your reserved physical range (check dmesg or /proc/iomem)
+# 2. Boot with: mem=60G iomem=relaxed  (if 64G total, reserves 4G from 60G upward)
+
+# Build
+make DEVMEM_PHYS_ADDR=0xF00000000UL DEVMEM_SIZE=0x100000000UL
+
+# Run (must be root)
+sudo ./bfs -g 20 -n 10
+# Prints: "DevMemArena: mapped phys 0xF00000000, 4096 MiB at virt 0x..."
+
+# Compare with baseline
+make clean && make
+./bfs -g 20 -n 10 | grep "Average Time"
+
 Tests live in `test/test.mk` (included by root `Makefile`). Small reference graphs are in `test/graphs/` and expected output strings in `test/reference/`. Test output files are written to `test/out/` (created on demand).
 
 `TEST_GRAPH ?= g10` controls which graph is used for verification tests; override to use a different graph:
