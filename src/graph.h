@@ -10,6 +10,7 @@
 #include <iostream>
 #include <type_traits>
 
+#include "devmem_alloc.h"
 #include "pvector.h"
 #include "util.h"
 
@@ -117,6 +118,18 @@ class CSRGraph {
   };
 
   void ReleaseResources() {
+#ifdef DEVMEM_PHYS_ADDR
+    if (out_index_ != nullptr && !DevMemArena::is_arena_ptr(out_index_))
+      delete[] out_index_;
+    if (out_neighbors_ != nullptr && !DevMemArena::is_arena_ptr(out_neighbors_))
+      delete[] out_neighbors_;
+    if (directed_) {
+      if (in_index_ != nullptr && !DevMemArena::is_arena_ptr(in_index_))
+        delete[] in_index_;
+      if (in_neighbors_ != nullptr && !DevMemArena::is_arena_ptr(in_neighbors_))
+        delete[] in_neighbors_;
+    }
+#else
     if (out_index_ != nullptr)
       delete[] out_index_;
     if (out_neighbors_ != nullptr)
@@ -127,6 +140,7 @@ class CSRGraph {
       if (in_neighbors_ != nullptr)
         delete[] in_neighbors_;
     }
+#endif
   }
 
 
@@ -241,7 +255,7 @@ class CSRGraph {
 
   static DestID_** GenIndex(const pvector<SGOffset> &offsets, DestID_* neighs) {
     NodeID_ length = offsets.size();
-    DestID_** index = new DestID_*[length];
+    DestID_** index = GAPBS_ALLOC(DestID_*, length);
     #pragma omp parallel for
     for (NodeID_ n=0; n < length; n++)
       index[n] = neighs + offsets[n];

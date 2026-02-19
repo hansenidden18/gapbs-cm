@@ -3,6 +3,14 @@
 CXX_FLAGS += -std=c++11 -O3 -Wall
 PAR_FLAG = -fopenmp
 
+ifdef DEVMEM_PHYS_ADDR
+  ifndef DEVMEM_SIZE
+    $(error DEVMEM_SIZE must be set when DEVMEM_PHYS_ADDR is set)
+  endif
+  CXX_FLAGS += -DDEVMEM_PHYS_ADDR=$(DEVMEM_PHYS_ADDR) \
+               -DDEVMEM_SIZE=$(DEVMEM_SIZE)
+endif
+
 ifneq (,$(findstring icpc,$(CXX)))
 	PAR_FLAG = -openmp
 endif
